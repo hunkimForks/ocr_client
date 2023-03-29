@@ -7,4 +7,4 @@ A simple OCR package that provides text extraction and text with coordinates ext
 ## Installation
 
 ```bash
-pip install ocr-package# up_ocr_client
+pip install git+https://https://github.com/UpstageAI/up_ocr_client.git
