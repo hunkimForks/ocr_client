@@ -12,7 +12,7 @@ cd upstage
 pip install .
 ```
 
-## Run
+## Usage
 
 ```python
 from upstage.api import OCR
@@ -24,4 +24,10 @@ filename = "/path/to/image.png"
 client = OCR(api_url, api_key, log_level="DEBUG", timeout=10)
 text = client.request(filename, "text")
 print(text)
+```
+
+## Testing
+
+```bash
+python tests/test_ocr.py
 ```
