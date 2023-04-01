@@ -6,17 +6,17 @@ import base64
 
 
 class UpOCRClient:
-    def __init__(self, backend_url: str, secret: str, timeout=10, log_level: str = "INFO"):
-        self.ocr_backend_url = backend_url
-        self.ocr_secret = secret
+    def __init__(self, url: str, api_key: str, timeout=10, log_level: str="INFO"):
+        self.url = url
+        self.api_key = api_key
         self.timeout = timeout
         self.log_level = log_level
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level=self.log_level)
 
-    def call_ocr_api(self, img_filename=None, img_bytes=None, image_base64=None, img_format=""):
-        headers = {"secret": self.ocr_secret}
+    def request(self, img_filename=None, img_bytes=None, image_base64=None, img_format=""):
+        headers = {"api_key": self.api_key}
         response_json = {}
 
         try:
@@ -35,7 +35,7 @@ class UpOCRClient:
 
         try:
             response = requests.post(
-                self.ocr_backend_url, files=payload, headers=headers, timeout=self.timeout
+                self.url, files=payload, headers=headers, timeout=self.timeout
             )
 
             response.raise_for_status()
@@ -52,7 +52,7 @@ class UpOCRClient:
         return response_json
 
     def get_text(self,  img_filename=None, img_bytes=None, image_base64=None) -> str:
-        ocr_data = self.call_ocr_api(
+        ocr_data = self.request(
             img_filename=img_filename, img_bytes=img_bytes, image_base64=image_base64)
         if ocr_data is None:
             return ""
@@ -66,7 +66,7 @@ class UpOCRClient:
 
     def get_text_with_coors(self,  img_filename=None, img_bytes=None, image_base64=None) -> list:
         result = []
-        ocr_data = self.call_ocr_api(
+        ocr_data = self.request(
             img_filename=img_filename, img_bytes=img_bytes, image_base64=image_base64)
 
         if ocr_data is None:
