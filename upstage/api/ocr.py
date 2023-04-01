@@ -45,6 +45,18 @@ def _select_target_from_data(data, target):
 
 class OCR:
     def __init__(self, url: str, api_key: str, timeout=10, log_level="INFO"):
+        """
+        Initializes an instance of the OCR class.
+
+        Args:
+            url (str): The URL of the OCR API endpoint.
+            api_key (str): The API key used to authenticate with the OCR API.
+            timeout (int, optional): The number of seconds to wait for a response from the API (default is 10).
+            log_level (str, optional): The logging level for the OCR instance (default is "INFO").
+
+        Returns:
+            None
+        """
         # Set variables
         self.url = url
         self.api_key = api_key
@@ -57,6 +69,17 @@ class OCR:
         self.logger.setLevel(level=self.log_level)
 
     def request(self, image, target=None, confidence_threshold=0.95) -> dict:
+        """
+        Requests Upstage OCR API on the input image and returns the result as a dictionary.
+
+        Args:
+            image (str or bytes): The input image as a filename or byte string, or a base64-encoded string.
+            target (str, optional): The type of OCR result to return. Valid values are "text", "text_with_coords", or None (default). If "text", the result will be a string containing the transcribed text. If "text_with_coords", the result will be a list of dictionaries, where each dictionary contains the transcribed text and the coordinates of the bounding box for the corresponding word. If None, the full OCR result dictionary will be returned.
+            confidence_threshold (float, optional): The minimum confidence score required for the OCR result to be considered valid. Must be a value between 0 and 1. Default is 0.95.
+
+        Returns:
+            dict: The OCR result as a dictionary.
+        """
         try:
             # Process image
             files = {"image": _process_image(image)}
