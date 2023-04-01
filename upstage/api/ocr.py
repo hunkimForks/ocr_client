@@ -5,12 +5,12 @@ import os
 import requests
 
 
-def get_confidence_score(data):
+def _get_confidence_score(data):
     result = json.loads(data["ocrResult"]["result"])
     return result.get("document_confidence")
 
 
-def process_image(image):
+def _process_image(image):
     # If input is a byte string, return as-is
     if isinstance(image, bytes):
         return image
@@ -27,7 +27,7 @@ def process_image(image):
             raise ValueError(f"Invalid input: image must be a filename, byte string, or base64 string: {e}")
 
 
-def select_target_from_data(data, target):
+def _select_target_from_data(data, target):
     if target == "text":
         words = json.loads(data["ocrResult"]["result"])["words"].values()
         return " ".join([v["transcription"] for v in words])
@@ -43,7 +43,7 @@ def select_target_from_data(data, target):
         return data
 
 
-class UpOCRClient:
+class OCR:
     def __init__(self, url: str, api_key: str, timeout=10, log_level="INFO"):
         # Set variables
         self.url = url
@@ -59,17 +59,17 @@ class UpOCRClient:
     def request(self, image, target=None, confidence_threshold=0.95) -> dict:
         try:
             # Process image
-            files = {"image": process_image(image)}
+            files = {"image": _process_image(image)}
 
             # Get response
             response = requests.post(self.url, headers=self.headers, files=files, timeout=self.timeout)
 
             # Check confidence score
             data = response.json()
-            confidence = get_confidence_score(data)
+            confidence = _get_confidence_score(data)
             self.logger.debug(f"Confidence: {confidence}")
             if confidence is not None and confidence >= confidence_threshold:
-                return select_target_from_data(data, target)
+                return _select_target_from_data(data, target)
             else:
                 raise ValueError(f"Confidence insufficient: {confidence} < {confidence_threshold}")
 
