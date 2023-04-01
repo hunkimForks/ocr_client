@@ -1,9 +1,8 @@
-import requests
-import io
-import logging
-import json
 import base64
+import json
+import logging
 import os
+import requests
 
 
 def get_confidence_score(data):
@@ -42,7 +41,7 @@ def process_image(image):
 
 
 class UpOCRClient:
-    def __init__(self, url: str, api_key: str, timeout=10, log_level: str="INFO"):
+    def __init__(self, url: str, api_key: str, timeout=10, log_level="INFO"):
         # Set variables
         self.url = url
         self.api_key = api_key
