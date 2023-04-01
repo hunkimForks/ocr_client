@@ -4,7 +4,7 @@
 
 ```bash
 # install directly from GitHub
-pip install git+https://https://github.com/UpstageAI/upstage.git
+pip install git+https://github.com/UpstageAI/upstage.git
 
 # get source and install
 git clone https://github.com/UpstageAI/upstage.git
