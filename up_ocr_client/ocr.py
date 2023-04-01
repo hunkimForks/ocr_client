@@ -22,16 +22,16 @@ def process_image(image):
     # Check if input is a base64 string, convert to bytes
     else:
         try:
-            return base64.b64decode(image.split(',')[-1])
+            return base64.b64decode(image.split(",")[-1])
         except Exception as e:
-            raise ValueError(f'Invalid input: image must be a filename, byte string, or base64 string: {e}')
+            raise ValueError(f"Invalid input: image must be a filename, byte string, or base64 string: {e}")
 
 
 def select_target_from_data(data, target):
-    if target == 'text':
+    if target == "text":
         words = json.loads(data["ocrResult"]["result"])["words"].values()
         return " ".join([v["transcription"] for v in words])
-    elif target == 'text_with_coords':
+    elif target == "text_with_coords":
         words = json.loads(data["ocrResult"]["result"])["words"].values()
         result = []
         for word in words:
