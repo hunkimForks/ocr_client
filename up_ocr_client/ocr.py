@@ -3,83 +3,81 @@ import io
 import logging
 import json
 import base64
+import os
+
+
+def get_confidence_score(data):
+    result = json.loads(data["ocrResult"]["result"])
+    return result.get("document_confidence")
+
+
+def select_target_from_data(data, target):
+    if target == 'text':
+        words = json.loads(data["ocrResult"]["result"])["words"].values()
+        return " ".join([v["transcription"] for v in words])
+    elif target == 'text_with_coords':
+        words = json.loads(data["ocrResult"]["result"])["words"].values()
+        result = []
+        for word in words:
+            text = word["transcription"]
+            coords = [(int(x), int(y)) for x, y in word["points"]]
+            result.append({"text": text, "coordinates": coords})
+        return result
+    else:
+        return data
+
+
+def process_image(image):
+    # Input is a byte string
+    if isinstance(image, bytes):
+        return image
+    # Input is a filename
+    elif isinstance(image, str) and os.path.isfile(image):
+        return open(image, "rb")
+    # Input is a base64 string
+    elif isinstance(image, str) and image.startswith('data:image/'):
+        return base64.b64decode(image.split(',')[1])
+    else:
+        raise ValueError('Invalid input: image must be a filename, byte string, or base64 string')
 
 
 class UpOCRClient:
     def __init__(self, url: str, api_key: str, timeout=10, log_level: str="INFO"):
+        # Set variables
         self.url = url
         self.api_key = api_key
+        self.headers = {"Authorization": f"Bearer {self.api_key}"}
         self.timeout = timeout
         self.log_level = log_level
 
+        # Set logger
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level=self.log_level)
 
-    def request(self, img_filename=None, img_bytes=None, image_base64=None, img_format=""):
-        headers = {"api_key": self.api_key}
-        response_json = {}
-
+    def request(self, image, target=None, confidence_threshold=0.95) -> dict:
+        # Process image
         try:
-            if img_filename:
-                img_bytes = open(img_filename, "rb")
-            elif image_base64:
-                img_bytes = io.BytesIO(base64.b64decode(image_base64))
+            files = {"image": process_image(image)}
         except Exception as e:
-            self.logger.error("UpOCR failed: " + str(e))
+            self.logger.error("Failed during processing image: " + str(e))
 
-        if img_bytes is None:
-            raise Exception("No image data provided")
+        # Get response
+        response = requests.post(self.url, headers=self.headers, files=files, timeout=self.timeout)
 
-        file_tuple = ("file", img_bytes, f"image/{img_format}")
-        payload = {"image": file_tuple}
-
+        # Check confidence score
         try:
-            response = requests.post(
-                self.url, files=payload, headers=headers, timeout=self.timeout
-            )
-
-            response.raise_for_status()
-            response_json = response.json()
+            data = response.json()
+            confidence = get_confidence_score(data)
+            self.logger.debug(f"Confidence: {confidence}")
+            if confidence is not None and confidence >= confidence_threshold:
+                return select_target_from_data(data, target)
+            else:
+                raise ValueError(f"Confidence insufficient: {confidence} < {confidence_threshold}")
+        # Raise request error
         except requests.exceptions.RequestException as e:
-            self.logger.error("UpOCR failed: " + str(e))
-            response = None
+            self.logger.error(f"Upstage API request exception: {e}")
+            return None
+        # Raise any other error
         except Exception as e:
-            self.logger.error("UpOCR failed: " + str(e))
-            response = None
-
-        # TODO: Lucy, please raise exception if confidence is too low
-
-        return response_json
-
-    def get_text(self,  img_filename=None, img_bytes=None, image_base64=None) -> str:
-        ocr_data = self.request(
-            img_filename=img_filename, img_bytes=img_bytes, image_base64=image_base64)
-        if ocr_data is None:
-            return ""
-
-        if ocr_data["ok"]:
-            parsed = json.loads(ocr_data["ocrResult"]["result"])
-            all_words = [v["transcription"] for v in parsed["words"].values()]
-            return " ".join(all_words)
-
-        return ""
-
-    def get_text_with_coors(self,  img_filename=None, img_bytes=None, image_base64=None) -> list:
-        result = []
-        ocr_data = self.request(
-            img_filename=img_filename, img_bytes=img_bytes, image_base64=image_base64)
-
-        if ocr_data is None:
-            return result
-
-        if not ocr_data["ok"]:
-            return result
-
-        ocr_result = json.loads(ocr_data["ocrResult"]["result"])["words"]
-
-        for _, value in ocr_result.items():
-            text = value["transcription"]
-            coordinates = value["points"]
-            coordinates_int = [(int(x), int(y)) for x, y in coordinates]
-            result.append({"text": text, "coordinates": coordinates_int})
-        return result
+            self.logger.error(f"Upstage API failed: {e}")
+            return None
