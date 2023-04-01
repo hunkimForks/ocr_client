@@ -3,11 +3,8 @@ import os
 import unittest
 from upstage.api import OCR
 
-# Initialize the client
 UPSTAGE_API_OCR_URL = os.environ["OCR_BACKEND_URL"]
 UPSTAGE_API_KEY = os.environ["OCR_SECRET"]
-UPSTAGE_API_OCR_URL = "https://ap-northeast-2.apistage.ai/document-ai/ocr"
-UPSTAGE_API_KEY = "JkPzjbc4PCnVqUZuqMPKlb49jEUeeobO"
 
 
 class TestOCR(unittest.TestCase):
