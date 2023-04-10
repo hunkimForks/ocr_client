@@ -32,7 +32,7 @@ def _select_target_from_data(data, target):
         words = data["pages"][0]["words"]
         result = []
         for word in words:
-            coords = [(coord["x"], coord["x"]) for coord in word["boundingBox"]["vertices"]]
+            coords = [(coord["x"], coord["y"]) for coord in word["boundingBox"]["vertices"]]
             result.append({"text": word["text"], "coordinates": coords})
         return result
     else:
