@@ -1,13 +1,11 @@
 import base64
-import json
 import logging
 import os
 import requests
 
 
 def _get_confidence_score(data):
-    result = json.loads(data["ocrResult"]["result"])
-    return result.get("document_confidence")
+    return data["confidence"]
 
 
 def _process_image(image):
@@ -29,28 +27,27 @@ def _process_image(image):
 
 def _select_target_from_data(data, target):
     if target == "text":
-        words = json.loads(data["ocrResult"]["result"])["words"].values()
-        return " ".join([v["transcription"] for v in words])
+        return data["text"]
     elif target == "text_with_coords":
-        words = json.loads(data["ocrResult"]["result"])["words"].values()
+        words = data["pages"][0]["words"]
         result = []
         for word in words:
-            text = word["transcription"]
-            coords = [(int(x), int(y)) for x, y in word["points"]]
-            result.append({"text": text, "coordinates": coords})
+            coords = [(coord["x"], coord["y"]) for coord in word["boundingBox"]["vertices"]]
+            result.append({"text": word["text"], "coordinates": coords})
         return result
     else:
         return data
 
 
 class OCR:
-    def __init__(self, url: str, api_key: str, timeout=10, log_level="INFO"):
+    def __init__(self, url: str, api_key: str, redact=False, timeout=10, log_level="INFO"):
         """
         Initializes an instance of the OCR class.
 
         Args:
             url (str): The URL of the OCR API endpoint.
             api_key (str): The API key used to authenticate with the OCR API.
+            redact (bool, optional): Whether to redact sensitive information from the OCR result. Default is False.
             timeout (int, optional): The number of seconds to wait for a response from the API (default is 10).
             log_level (str, optional): The logging level for the OCR instance (default is "INFO").
 
@@ -61,6 +58,7 @@ class OCR:
         self.url = url
         self.api_key = api_key
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
+        self.payload = {"redact": redact}
         self.timeout = timeout
         self.log_level = log_level
 
@@ -85,10 +83,10 @@ class OCR:
             files = {"image": _process_image(image)}
 
             # Get response
-            response = requests.post(self.url, headers=self.headers, files=files, timeout=self.timeout)
+            response = requests.post(self.url, headers=self.headers, data=self.payload, files=files, timeout=self.timeout)
+            data = response.json()
 
             # Check confidence score
-            data = response.json()
             confidence = _get_confidence_score(data)
             self.logger.debug(f"Confidence: {confidence}")
             if confidence is not None and confidence >= confidence_threshold:
