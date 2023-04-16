@@ -1,17 +1,17 @@
 import base64
 import os
 import unittest
-from upstage.api import OCR
+from upstage.api import Extractor
 
 
-UPSTAGE_API_OCR_URL = os.environ["UPSTAGE_API_OCR_URL"]
+UPSTAGE_API_EXTRACTOR_URL = os.environ["UPSTAGE_API_EXTRACTOR_URL"]
 UPSTAGE_API_KEY = os.environ["UPSTAGE_API_KEY"]
 
 
-class TestOCR(unittest.TestCase):
+class TestExtractor(unittest.TestCase):
     def setUp(self):
-        self.client = OCR(UPSTAGE_API_OCR_URL, UPSTAGE_API_KEY, timeout=10, log_level="INFO")
-        self.filename = os.path.join(os.path.dirname(__file__), "data", "upstage.png")
+        self.client = Extractor(UPSTAGE_API_EXTRACTOR_URL, UPSTAGE_API_KEY, timeout=30, log_level="INFO")
+        self.filename = os.path.join(os.path.dirname(__file__), "data", "receipt.jpg")
 
     def test_request_with_filename(self):
         result = self.client.request(self.filename)
@@ -31,10 +31,10 @@ class TestOCR(unittest.TestCase):
         self.assertIsInstance(result, dict)
 
 
-class TestOCRRedaction(unittest.TestCase):
+class TestExtractorRedaction(unittest.TestCase):
     def setUp(self):
-        self.client = OCR(UPSTAGE_API_OCR_URL, UPSTAGE_API_KEY, redact=True, timeout=10, log_level="INFO")
-        self.filename = os.path.join(os.path.dirname(__file__), "data", "upstage.png")
+        self.client = Extractor(UPSTAGE_API_EXTRACTOR_URL, UPSTAGE_API_KEY, redact=True, timeout=30, log_level="INFO")
+        self.filename = os.path.join(os.path.dirname(__file__), "data", "receipt.jpg")
 
     def test_request_with_filename(self):
         result = self.client.request(self.filename)

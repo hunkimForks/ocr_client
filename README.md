@@ -14,6 +14,8 @@ pip install .
 
 ## Usage
 
+### OCR
+
 ```python
 from upstage.api import OCR
 
@@ -26,8 +28,23 @@ text = client.request(filename, "text")
 print(text)
 ```
 
+### Extractor
+
+```python
+from upstage.api import Extractor
+
+document_type = "receipt"
+api_key = "YOUR_UPSTAGE_API_KEY"
+api_url = f"https://ap-northeast-2.apistage.ai/document-ai/extractor/{document_type}"
+filename = "/path/to/image.png"
+
+client = Extractor(api_url, api_key, log_level="DEBUG", timeout=10)
+response = client.request(filename)
+print(response.json())
+```
+
 ## Testing
 
 ```bash
-python tests/test_ocr.py
+python -m unittest discover tests
 ```
