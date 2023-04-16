@@ -4,10 +4,6 @@ import requests
 from ..utils import _process_image
 
 
-def _get_confidence_score(data):
-    return data["confidence"]
-
-
 def _select_target_from_data(data, target):
     if target == "text":
         return data["text"]
@@ -49,7 +45,7 @@ class OCR:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level=self.log_level)
 
-    def request(self, image, target=None, confidence_threshold=0.95) -> dict:
+    def request(self, image, target=None, confidence_threshold=0.95):
         """
         Requests Upstage OCR API on the input image and returns the result as a dictionary.
 
@@ -61,28 +57,17 @@ class OCR:
         Returns:
             dict: The OCR result as a dictionary.
         """
-        try:
-            # Process image
-            files = {"image": _process_image(image)}
+        # Process image
+        files = {"image": _process_image(image)}
 
-            # Get response
-            response = requests.post(self.url, headers=self.headers, data=self.payload, files=files, timeout=self.timeout)
-            data = response.json()
+        # Get response
+        response = requests.post(self.url, headers=self.headers, data=self.payload, files=files, timeout=self.timeout)
+        data = response.json()
 
-            # Check confidence score
-            confidence = _get_confidence_score(data)
-            self.logger.debug(f"Confidence: {confidence}")
-            if confidence is not None and confidence >= confidence_threshold:
-                return _select_target_from_data(data, target)
-            else:
-                raise ValueError(f"Confidence insufficient: {confidence} < {confidence_threshold}")
-
-        # Raise request error
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"Upstage API request exception: {e}")
-            return None
-
-        # Raise any other error
-        except Exception as e:
-            self.logger.error(f"Upstage API failed: {e}")
-            return None
+        # Check confidence score
+        confidence = data["confidence"]
+        self.logger.debug(f"Confidence: {confidence}")
+        if confidence is not None and confidence >= confidence_threshold:
+            return _select_target_from_data(data, target)
+        else:
+            raise ValueError(f"Confidence insufficient: {confidence} < {confidence_threshold}")
