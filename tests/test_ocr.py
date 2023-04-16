@@ -33,7 +33,6 @@ class TestOCR(unittest.TestCase):
 
 class TestOCRRedaction(unittest.TestCase):
     def setUp(self):
-        # Set up OCR client
         self.client = OCR(UPSTAGE_API_OCR_URL, UPSTAGE_API_KEY, redact=True, timeout=10, log_level="INFO")
         self.filename = os.path.join(os.path.dirname(__file__), "data", "upstage.png")
 
